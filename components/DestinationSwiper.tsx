@@ -7,7 +7,7 @@ import BottomNav from './BottomNav'
 interface Props {
   destinations: any[]
   wishlistIds: Set<string>
-  userId: string
+  userId: string | null
 }
 
 export default function DestinationSwiper({ destinations, wishlistIds, userId }: Props) {
@@ -17,20 +17,18 @@ export default function DestinationSwiper({ destinations, wishlistIds, userId }:
 
   const dest = destinations[cur]
 
-  async function toggleWishlist(id: string) {
+  function toggleWishlist(id: string) {
     const next = new Set(wishlisted)
     next.has(id) ? next.delete(id) : next.add(id)
     setWishlisted(next)
-    await fetch('/api/wishlist', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ destination_id: id }),
-    })
   }
 
   if (!dest) return (
     <div className="min-h-screen bg-[#0d1b2a] flex items-center justify-center">
-      <p className="text-white/40">No experiences found</p>
+      <div className="text-center">
+        <p className="text-white/40 mb-2">No experiences found</p>
+        <p className="text-white/20 text-sm">Run the SQL setup in Supabase first</p>
+      </div>
     </div>
   )
 
@@ -40,17 +38,15 @@ export default function DestinationSwiper({ destinations, wishlistIds, userId }:
         <h1 className="font-display italic text-xl text-white">Ailleurs</h1>
         <p className="text-xs text-white/35 tracking-widest uppercase">Cape Town</p>
       </div>
-
       <div className="flex-1 overflow-hidden relative">
         {showDetail ? (
           <DetailPanel dest={dest} isWishlisted={wishlisted.has(dest.id)}
-            onBack={() => setShowDetail(false)} onWishlist={() => toggleWishlist(dest.id)} />
+            onBack={() => setShowDetail(false)} onWishlist={() => toggleWishlist(dest.id)} userId={userId} />
         ) : (
           <DestinationCard dest={dest} isWishlisted={wishlisted.has(dest.id)}
             onTap={() => setShowDetail(true)} onWishlist={() => toggleWishlist(dest.id)} />
         )}
       </div>
-
       {!showDetail && (
         <>
           <div className="flex justify-center gap-1.5 py-2 shrink-0">
