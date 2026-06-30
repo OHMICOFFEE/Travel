@@ -15,17 +15,28 @@ export default async function DashboardPage() {
 
   if (!member) redirect('/register')
 
-  const { data: kyc } = await supabase
+  const { data: kycRows } = await supabase
     .from('kyc_submissions')
     .select('*')
     .eq('member_id', member.id)
     .order('submitted_at', { ascending: false })
     .limit(1)
-    .single()
 
-  const { data: nextRank } = member.current_rank_id
-    ? await supabase.from('ranks').select('*').gt('sort_order', member.ranks?.sort_order ?? 0).order('sort_order').limit(1).single()
-    : await supabase.from('ranks').select('*').eq('sort_order', 1).single()
+  const kyc = kycRows && kycRows.length > 0 ? kycRows[0] : null
+
+  let nextRank = null
+  if (member.current_rank_id && member.ranks) {
+    const { data: rows } = await supabase
+      .from('ranks')
+      .select('*')
+      .gt('sort_order', (member.ranks as any).sort_order ?? 0)
+      .order('sort_order')
+      .limit(1)
+    nextRank = rows && rows.length > 0 ? rows[0] : null
+  } else {
+    const { data: rows } = await supabase.from('ranks').select('*').eq('sort_order', 1).limit(1)
+    nextRank = rows && rows.length > 0 ? rows[0] : null
+  }
 
   const { data: payouts } = await supabase
     .from('payouts')
